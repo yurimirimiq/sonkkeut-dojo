@@ -625,14 +625,16 @@ function buildFill() {
   fillX.clearRect(0, 0, W, H);
   if (!st.bgLocked) {
     let src = bgC;
-    for (let i = 0; i < 7; i++) {
+    // 1픽셀이 될 때까지 절반씩 줄여 가며 평균색을 만든다. 구멍이 아무리 커도 가장 작은 단계에는 색이 남는다
+    const levels = Math.ceil(Math.log2(Math.max(W, H)));
+    for (let i = 0; i < levels; i++) {
       const c = pyramid[i] || (pyramid[i] = mk());
-      c.width = Math.max(2, W >> (i + 1)); c.height = Math.max(2, H >> (i + 1));
+      c.width = Math.max(1, W >> (i + 1)); c.height = Math.max(1, H >> (i + 1));
       c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
       src = c;
     }
-    for (let i = 6; i >= 0; i--) {
-      const times = i === 6 ? 8 : 2;
+    for (let i = levels - 1; i >= 0; i--) {
+      const times = i === levels - 1 ? 16 : 2;
       for (let j = 0; j < times; j++) fillX.drawImage(pyramid[i], 0, 0, W, H);
     }
   }
