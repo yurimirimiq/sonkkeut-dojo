@@ -15,6 +15,7 @@
     --paper: #efe8d6;
     --paper-dim: #b9b6aa;
     --leaf: #8fb070;
+    --sky: #7cc8ff;
     --brass: #c9a24b;
     --brush: "East Sea Dokdo", "Nanum Brush Script", cursive;
     --body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
@@ -36,7 +37,7 @@
   #intro {
     position: fixed; inset: 0; z-index: 10;
     display: grid;
-    grid-template-columns: auto minmax(0, 34rem);
+    grid-template-columns: auto minmax(0, 36rem);
     gap: clamp(2rem, 7vw, 6rem);
     align-items: center;
     justify-content: center;
@@ -59,13 +60,13 @@
     color: var(--paper);
     text-shadow: 0.04em 0.04em 0 var(--indigo-deep);
   }
-  #intro .lead { font-size: 1.25rem; margin: 0 0 2rem; max-width: 26em; }
-  .moves { list-style: none; margin: 0 0 2.25rem; padding: 0; }
+  #intro .lead { font-size: 1.25rem; margin: 0 0 1.5rem; max-width: 26em; }
+  .moves { list-style: none; margin: 0 0 2rem; padding: 0; }
   .moves li {
     display: grid;
-    grid-template-columns: 11.5em 1fr;
+    grid-template-columns: 12.5em 1fr;
     gap: 1rem;
-    padding: 0.9rem 0;
+    padding: 0.7rem 0;
     border-top: 1px solid rgba(239, 232, 214, 0.22);
   }
   .moves li:last-child { border-bottom: 1px solid rgba(239, 232, 214, 0.22); }
@@ -110,32 +111,39 @@
     border-radius: 14px;
   }
 
-  #legend { top: 1rem; left: 1rem; padding: 0.4rem; max-width: min(21rem, calc(100vw - 2rem)); font-size: 0.92rem; }
+  #legend { top: 1rem; left: 1rem; padding: 0.4rem; max-width: min(22rem, calc(100vw - 2rem)); font-size: 0.92rem; }
   #legend[hidden] { display: none; }
   #legend .row {
     display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: center;
-    width: 100%; padding: 0.5rem 0.7rem;
+    width: 100%; padding: 0.45rem 0.7rem;
     background: none; border: 0; border-radius: 10px; text-align: left;
   }
-  #legend button.row:hover { background: rgba(239, 232, 214, 0.12); }
+  #legend .row:hover { background: rgba(239, 232, 214, 0.12); }
   #legend .row b { font-family: var(--brush); font-weight: 400; font-size: 1.5rem; line-height: 1; color: var(--paper); }
   #legend .row span { color: var(--leaf); }
   #legend .tip { margin: 0.2rem 0.7rem 0.4rem; font-size: 0.8rem; color: var(--paper-dim); }
 
-  #gauge { left: 1rem; bottom: 1rem; display: flex; align-items: center; gap: 0.7rem; padding: 0.5rem 0.9rem 0.5rem 0.5rem; border-radius: 999px; }
-  #gauge svg { width: 46px; height: 46px; transform: rotate(-90deg); }
-  #gauge circle { fill: none; stroke-width: 4; }
-  #gauge .track { stroke: rgba(239, 232, 214, 0.2); }
-  #gauge .fill { stroke: var(--leaf); stroke-linecap: round; stroke-dasharray: 113.1; stroke-dashoffset: 113.1; }
-  #gaugeLabel { font-size: 0.9rem; min-width: 7.5em; }
+  #gauge { left: 1rem; bottom: 1rem; display: flex; flex-direction: column; gap: 0.3rem; align-items: flex-start; }
+  #gaugeLabel { font-size: 0.8rem; letter-spacing: 0.08em; color: var(--sky); text-shadow: 0 1px 4px #000, 0 0 2px #000; }
+  .dial { position: relative; width: 52px; height: 52px; border-radius: 50%; background: rgba(12, 21, 41, 0.6); }
+  .dial svg { width: 52px; height: 52px; transform: rotate(-90deg); display: block; }
+  .dial circle { fill: none; stroke-width: 3.5; }
+  .dial .track { stroke: rgba(239, 232, 214, 0.2); }
+  .dial .fill { stroke: var(--sky); stroke-linecap: round; stroke-dasharray: 113.1; stroke-dashoffset: 113.1; }
+  #gaugePct { position: absolute; inset: 0; display: grid; place-items: center; font-size: 0.72rem; }
 
-  #tools { right: 1rem; bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
+  #tools { right: 1rem; bottom: 1rem; display: flex; gap: 0.5rem; }
   #tools button {
-    border: 0; border-radius: 999px; padding: 0.55rem 1rem; font-size: 0.9rem;
+    width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+    display: grid; place-items: center; font-size: 1.15rem; font-weight: 700;
     background: rgba(12, 21, 41, 0.72);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   }
-  #tools button:hover { background: rgba(34, 56, 106, 0.9); }
+  #tools button:hover:not(:disabled) { background: rgba(34, 56, 106, 0.95); }
+  #tools button:disabled { opacity: 0.5; }
+  #tools svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+  #tools .slash { display: none; }
+  #tools [aria-pressed="false"] .slash { display: block; }
 
   #toast {
     left: 50%; top: 1rem; transform: translateX(-50%);
@@ -167,10 +175,6 @@
   @media (prefers-reduced-motion: reduce) {
     @keyframes stamp { 0% { opacity: 0; } 12% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
   }
-  @media (max-width: 720px) {
-    #gaugeLabel { min-width: 0; }
-    #tools { max-width: 55vw; }
-  }
 </style>
 </head>
 <body>
@@ -181,12 +185,16 @@
     <p class="lead">카메라 앞에서 손 모양을 만들면 술법이 펼쳐집니다.</p>
     <ul class="moves">
       <li>
-        <span class="sign">손바닥을 활짝 펴기</span>
-        <span><span class="name">회오리 구슬</span><span class="what">손바닥 위에서 빛나는 구슬이 돕니다.</span></span>
+        <span class="sign">화면 오른쪽에서 손바닥 펴기</span>
+        <span><span class="name">회오리 구슬</span><span class="what">손바닥 위에서 푸른 구슬이 소용돌이칩니다.</span></span>
+      </li>
+      <li>
+        <span class="sign">화면 왼쪽에서 손바닥 펴기</span>
+        <span><span class="name">벼락 손</span><span class="what">손끝에서 번개가 화면 가득 뻗어 나갑니다.</span></span>
       </li>
       <li>
         <span class="sign">두 손 검지를 열십자로 겹치기</span>
-        <span><span class="name">그림자 나누기</span><span class="what">내 모습이 양옆에 더 나타나 함께 움직입니다.</span></span>
+        <span><span class="name">그림자 나누기</span><span class="what">내 모습이 양옆에 하나씩 나타나 함께 움직입니다.</span></span>
       </li>
       <li>
         <span class="sign">주먹을 쥐고 잠깐 버티기</span>
@@ -204,24 +212,32 @@
   <canvas id="view"></canvas>
 
   <div id="legend" class="hud panel">
-    <div class="row"><b>회오리 구슬</b><span>손바닥 펴기</span></div>
+    <button class="row" type="button" data-demo="orb"><b>회오리 구슬</b><span>오른쪽에서 손바닥</span></button>
+    <button class="row" type="button" data-demo="bolt"><b>벼락 손</b><span>왼쪽에서 손바닥</span></button>
     <button class="row" type="button" data-cast="clone"><b>그림자 나누기</b><span>검지 열십자</span></button>
     <button class="row" type="button" data-cast="vanish"><b>바람결 숨기</b><span>주먹 쥐기</span></button>
     <p class="tip">손 모양이 잘 안 잡히면 이름을 눌러도 됩니다.</p>
   </div>
 
-  <div id="gauge" class="hud panel" aria-live="polite">
-    <svg viewBox="0 0 44 44" aria-hidden="true">
-      <circle class="track" cx="22" cy="22" r="18"></circle>
-      <circle class="fill" id="ring" cx="22" cy="22" r="18"></circle>
-    </svg>
-    <span id="gaugeLabel">손을 보여 주세요</span>
+  <div id="gauge" class="hud">
+    <span id="gaugeLabel">대기</span>
+    <div class="dial">
+      <svg viewBox="0 0 44 44" aria-hidden="true">
+        <circle class="track" cx="22" cy="22" r="18"></circle>
+        <circle class="fill" id="ring" cx="22" cy="22" r="18"></circle>
+      </svg>
+      <span id="gaugePct">0%</span>
+    </div>
   </div>
 
   <div id="tools" class="hud">
-    <button id="btnBg" type="button">배경 찍기</button>
-    <button id="btnSound" type="button" aria-pressed="true">소리 끄기</button>
-    <button id="btnLegend" type="button">안내 숨기기</button>
+    <button id="btnBg" type="button" aria-label="배경 찍기" title="배경 찍기">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v10H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+    </button>
+    <button id="btnLegend" type="button" aria-label="안내" title="안내" aria-pressed="true">?</button>
+    <button id="btnSound" type="button" aria-label="소리" title="소리" aria-pressed="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l4 3.5v-11L7 10z"/><path d="M15 9.5c1.2 1.4 1.2 3.6 0 5M17.5 7.5c2.3 2.6 2.3 6.4 0 9"/><path class="slash" d="M4 4l16 16"/></svg>
+    </button>
   </div>
 
   <div id="toast" class="hud panel" role="status"></div>
@@ -233,7 +249,7 @@ const CDN = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3";
 const HAND_MODEL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
 const SEG_MODEL = "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite";
 
-const NAMES = { orb: "회오리 구슬", clone: "그림자 나누기", vanish: "바람결 숨기" };
+const NAMES = { orb: "회오리 구슬", bolt: "벼락 손", clone: "그림자 나누기", vanish: "바람결 숨기" };
 const HOLD_MS = 700;        // 손 모양을 이만큼 유지하면 발동
 const CLONE_MS = 7000;
 const VANISH_MS = 3500;
@@ -241,22 +257,26 @@ const VANISH_MS = 3500;
 const $ = (id) => document.getElementById(id);
 const intro = $("intro"), stage = $("stage"), startBtn = $("start"), errorEl = $("error");
 const video = $("cam"), view = $("view"), ctx = view.getContext("2d");
-const ring = $("ring"), gaugeLabel = $("gaugeLabel"), toastEl = $("toast"), callout = $("callout");
+const ring = $("ring"), gaugeLabel = $("gaugeLabel"), gaugePct = $("gaugePct");
+const toastEl = $("toast"), callout = $("callout"), legend = $("legend");
 
 let W = 1280, H = 720;
 let hands, segmenter;
 
 // 보조 캔버스
 const mk = () => document.createElement("canvas");
-const maskC = mk(), hardC = mk(), personC = mk(), bgC = mk(), tmpC = mk(), segC = mk();
+const maskC = mk(), hardC = mk(), personC = mk(), bgC = mk(), tmpC = mk(), segC = mk(), fillC = mk();
 const maskX = maskC.getContext("2d"), hardX = hardC.getContext("2d");
-const personX = personC.getContext("2d"), bgX = bgC.getContext("2d"), tmpX = tmpC.getContext("2d"), segX = segC.getContext("2d");
-let maskImg, hardImg;
+const personX = personC.getContext("2d"), bgX = bgC.getContext("2d"), tmpX = tmpC.getContext("2d");
+const segX = segC.getContext("2d"), fillX = fillC.getContext("2d");
+const pyramid = [];
+let maskImg, hardImg, bin, binTmp;
 const canFilter = "filter" in ctx;
 
 // 상태
 const st = {
-  orbs: [],                               // 손마다 {x, y, r, k}
+  orbs: [],                               // {type, x, y, r, k, on}
+  demo: { orb: false, bolt: false },
   cloneUntil: 0, cloneStart: 0,
   vanishUntil: 0, vanishStart: 0, vanishK: 0,
   person: { x: 0.5, y: 0.55, w: 0.3 },    // 사람 위치(정규화)
@@ -264,12 +284,13 @@ const st = {
   bgReady: false, bgLocked: false,
   invert: false, voteOk: 0, voteBad: 0,
   hold: { name: null, t: 0, last: 0, fired: false },
+  lastCallout: {},
   frame: 0,
 };
 const particles = [];
 
 /* ---------- 소리 ---------- */
-let ac, soundOn = true, humGain;
+let ac, soundOn = true, humGain, crackGain;
 function initAudio() {
   try {
     ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -279,7 +300,11 @@ function initAudio() {
     const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
     const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 520; bp.Q.value = 1.4;
     humGain = ac.createGain(); humGain.gain.value = 0;
-    src.connect(bp).connect(humGain).connect(ac.destination); src.start();
+    src.connect(bp).connect(humGain).connect(ac.destination);
+    const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 2600;
+    crackGain = ac.createGain(); crackGain.gain.value = 0;
+    src.connect(hp).connect(crackGain).connect(ac.destination);
+    src.start();
   } catch { ac = null; }
 }
 function poof() {
@@ -298,8 +323,11 @@ function toast(msg, ms = 2200) {
   clearTimeout(toastTimer);
   if (ms) toastTimer = setTimeout(() => toastEl.classList.remove("on"), ms);
 }
-function showCallout(text) {
-  callout.textContent = text;
+function showCallout(name) {
+  const now = performance.now();
+  if (now - (st.lastCallout[name] || -1e9) < 4000) return;
+  st.lastCallout[name] = now;
+  callout.textContent = NAMES[name];
   callout.classList.remove("on"); void callout.offsetWidth; callout.classList.add("on");
 }
 
@@ -360,29 +388,84 @@ function drawParticles(dt) {
 
 /* ---------- 회오리 구슬 ---------- */
 function drawOrb(o, t) {
-  const { x, y, k } = o, r = o.r * (0.35 + 0.65 * k);
+  const { x, y, k } = o, r = o.r * (0.3 + 0.7 * k);
   ctx.save();
+  // 바깥 빛
   ctx.globalCompositeOperation = "lighter";
-  let g = ctx.createRadialGradient(x, y, 0, x, y, r * 2.4);
-  g.addColorStop(0, `rgba(120,200,255,${0.4 * k})`); g.addColorStop(1, "rgba(60,140,255,0)");
-  ctx.fillStyle = g; ctx.fillRect(x - r * 2.4, y - r * 2.4, r * 4.8, r * 4.8);
-  g = ctx.createRadialGradient(x, y, 0, x, y, r);
-  g.addColorStop(0, `rgba(255,255,255,${k})`); g.addColorStop(0.4, `rgba(170,230,255,${0.9 * k})`);
-  g.addColorStop(0.8, `rgba(50,130,255,${0.45 * k})`); g.addColorStop(1, "rgba(40,110,255,0)");
+  let g = ctx.createRadialGradient(x, y, r * 0.6, x, y, r * 2.2);
+  g.addColorStop(0, `rgba(110,190,255,${0.45 * k})`); g.addColorStop(1, "rgba(60,140,255,0)");
+  ctx.fillStyle = g; ctx.fillRect(x - r * 2.2, y - r * 2.2, r * 4.4, r * 4.4);
+  // 푸른 알맹이
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = Math.min(1, k * 1.3);
+  g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.05, x, y, r);
+  g.addColorStop(0, "#e6f7ff"); g.addColorStop(0.3, "#6cc2ff"); g.addColorStop(0.75, "#1f86f2"); g.addColorStop(1, "#1463d6");
   ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
-  ctx.lineCap = "round";
+  // 알맹이 안쪽 소용돌이
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.clip();
+  ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = 1; ctx.lineCap = "round";
   for (let i = 0; i < 9; i++) {
-    const rr = r * (0.22 + i * 0.085), spin = t * (5 + i * 0.9) * (i % 2 ? 1 : -1) + i * 1.3;
-    ctx.strokeStyle = `rgba(255,255,255,${(0.6 - i * 0.04) * k})`;
-    ctx.lineWidth = r * (0.05 - i * 0.003);
+    const rr = r * (0.18 + i * 0.1), spin = t * (5 + i * 0.9) * (i % 2 ? 1 : -1) + i * 1.3;
+    ctx.strokeStyle = `rgba(225,245,255,${(0.55 - i * 0.03) * k})`;
+    ctx.lineWidth = r * (0.07 - i * 0.004);
     ctx.beginPath();
-    ctx.ellipse(x, y, rr, rr * (0.45 + 0.5 * Math.abs(Math.sin(i * 2.1))), i * 0.7 + t * 0.8, spin, spin + 1.5);
+    ctx.ellipse(x, y, rr, rr * (0.45 + 0.5 * Math.abs(Math.sin(i * 2.1))), i * 0.7 + t * 0.8, spin, spin + 1.7);
     ctx.stroke();
   }
-  for (let i = 0; i < 10; i++) {
-    const a = t * (3 + (i % 4)) + i * 0.63, rr = r * (1.0 + 0.35 * Math.sin(t * 2 + i));
-    ctx.fillStyle = `rgba(200,240,255,${0.7 * k})`;
-    ctx.beginPath(); ctx.arc(x + Math.cos(a) * rr, y + Math.sin(a) * rr * 0.8, r * 0.035, 0, 6.2832); ctx.fill();
+  ctx.restore();
+  // 바깥으로 휘감기는 흰 줄기
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+  for (let i = 0; i < 4; i++) {
+    const a0 = t * 4 + i * 1.571;
+    ctx.strokeStyle = `rgba(235,248,255,${0.5 * k * k})`;
+    ctx.lineWidth = r * 0.09;
+    ctx.beginPath();
+    for (let s = 0; s <= 12; s++) {
+      const u = s / 12, a = a0 + u * 2.4, rr = r * (1.02 + u * u * 1.5 * k);
+      const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr * 0.85;
+      s ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ---------- 벼락 손 ---------- */
+function zigzag(x0, y0, x1, y1, spread, out) {
+  if (spread < 5) { out.push(x1, y1); return; }
+  const mx = (x0 + x1) / 2 + (Math.random() - 0.5) * spread, my = (y0 + y1) / 2 + (Math.random() - 0.5) * spread;
+  zigzag(x0, y0, mx, my, spread / 2, out); zigzag(mx, my, x1, y1, spread / 2, out);
+}
+function newBolts(o) {
+  o.bolts = [];
+  for (let i = 0; i < 9; i++) {
+    const a = Math.random() * 6.2832, len = H * (0.3 + Math.random() * 0.85);
+    const pts = [o.x, o.y];
+    zigzag(o.x, o.y, o.x + Math.cos(a) * len, o.y + Math.sin(a) * len, len * 0.3, pts);
+    o.bolts.push({ pts, w: 1 + Math.random() * 2.2 });
+    if (Math.random() < 0.75) {
+      const j = (Math.floor((pts.length / 2) * (0.3 + Math.random() * 0.4))) * 2;
+      const b = a + (Math.random() - 0.5) * 1.5, l2 = len * 0.45, p2 = [pts[j], pts[j + 1]];
+      zigzag(p2[0], p2[1], p2[0] + Math.cos(b) * l2, p2[1] + Math.sin(b) * l2, l2 * 0.3, p2);
+      o.bolts.push({ pts: p2, w: 0.9 });
+    }
+  }
+}
+function drawBolt(o, now) {
+  if (!o.bolts || now - (o.boltT || 0) > 70) { newBolts(o); o.boltT = now; }
+  const k = o.k, u = H / 720, r = o.r;
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  ctx.fillStyle = `rgba(190,215,255,${0.07 * k * Math.random()})`; ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, r * 3);
+  g.addColorStop(0, `rgba(255,255,255,${0.95 * k})`); g.addColorStop(0.35, `rgba(170,200,255,${0.55 * k})`); g.addColorStop(1, "rgba(90,130,255,0)");
+  ctx.fillStyle = g; ctx.fillRect(o.x - r * 3, o.y - r * 3, r * 6, r * 6);
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  const n = Math.ceil(o.bolts.length * k);
+  for (let i = 0; i < n; i++) {
+    const b = o.bolts[i], p = b.pts;
+    ctx.beginPath(); ctx.moveTo(p[0], p[1]);
+    for (let j = 2; j < p.length; j += 2) ctx.lineTo(p[j], p[j + 1]);
+    ctx.strokeStyle = `rgba(110,160,255,${0.3 * k})`; ctx.lineWidth = b.w * 7 * u; ctx.stroke();
+    ctx.strokeStyle = `rgba(255,255,255,${0.95 * k})`; ctx.lineWidth = b.w * 1.4 * u; ctx.stroke();
   }
   ctx.restore();
 }
@@ -411,24 +494,48 @@ function readGesture(list) {
   if (list.some((h) => h.fist)) return "vanish";
   return null;
 }
+// 편 손과 이미 떠 있는 효과를 짝지어, 손이 움직여도 같은 효과가 따라가게 한다
+function updateOrbs(open, dt) {
+  for (const o of st.orbs) o.on = false;
+  for (const h of open) {
+    let best = null, bd = W * 0.35;
+    for (const o of st.orbs) {
+      if (o.on || o.k < 0.05) continue;
+      const d = Math.hypot(o.x - h.x, o.y - h.y);
+      if (d < bd) { bd = d; best = o; }
+    }
+    if (!best) {
+      best = st.orbs.find((o) => !o.on && o.k < 0.05);
+      if (!best) { best = { k: 0 }; st.orbs.push(best); }
+      // 캔버스가 좌우 반전되어 보이므로, 원본 영상의 왼쪽 절반이 화면 오른쪽이다
+      best.type = h.type || (h.nx < 0.5 ? "orb" : "bolt");
+      best.x = h.x; best.y = h.y; best.r = h.size * 0.8; best.k = 0.05; best.bolts = null;
+      showCallout(best.type);
+    }
+    best.on = true;
+    best.x += (h.x - best.x) * 0.55; best.y += (h.y - best.y) * 0.55; best.r += (h.size * 0.8 - best.r) * 0.4;
+    best.k = Math.min(1, best.k + dt * 2.2);
+  }
+  for (const o of st.orbs) if (!o.on) o.k = Math.max(0, o.k - dt * 2.5);
+}
 
 /* ---------- 술법 발동 ---------- */
+const cloneOffsets = () => [-0.34 * W, 0.34 * W];
 function cast(name) {
   const now = performance.now(), px = st.person.x * W, py = st.person.y * H;
   if (name === "clone") {
     if (now < st.cloneUntil || now < st.vanishUntil) return;
     st.cloneStart = now; st.cloneUntil = now + CLONE_MS;
-    for (const dx of cloneOffsets()) puff(px + dx, py, 0.55);
+    for (const dx of cloneOffsets()) puff(px + dx, py, 0.6);
   } else if (name === "vanish") {
     if (now < st.vanishUntil) return;
     st.cloneUntil = 0;
+    buildFill();
     st.vanishStart = now; st.vanishUntil = now + VANISH_MS;
     puff(px, py, 0.9); leaves(px, py);
   } else return;
-  poof(); showCallout(NAMES[name]);
+  poof(); showCallout(name);
 }
-const cloneOffsets = () => [-0.17 * W, 0.17 * W, -0.33 * W, 0.33 * W];
-
 function trackHold(g, now, dt) {
   const h = st.hold;
   if (g && g === h.name) { h.t += dt * 1000; h.last = now; }
@@ -446,6 +553,7 @@ function onMask(result) {
   if (maskC.width !== mw || maskC.height !== mh) {
     maskC.width = hardC.width = mw; maskC.height = hardC.height = mh;
     maskImg = maskX.createImageData(mw, mh); hardImg = hardX.createImageData(mw, mh);
+    bin = new Uint8Array(mw * mh); binTmp = new Uint8Array(mw * mh);
   }
   // 모델에 따라 사람/배경이 뒤집혀 나오는 경우를 손 위치로 판별한다
   for (const o of st.handsNow || []) {
@@ -454,18 +562,17 @@ function onMask(result) {
   }
   st.invert = st.voteBad > st.voteOk + 8;
 
-  const a = maskImg.data, b = hardImg.data, inv = st.invert;
+  const a = maskImg.data, inv = st.invert;
   let sx = 0, sy = 0, n = 0, minX = mw, maxX = 0;
   for (let i = 0, y = 0; y < mh; y++) {
     for (let x = 0; x < mw; x++, i++) {
       const p = inv ? 1 - f[i] : f[i];
-      const soft = p <= 0.3 ? 0 : p >= 0.7 ? 255 : ((p - 0.3) / 0.4) * 255;
-      a[i * 4 + 3] = soft;
-      b[i * 4 + 3] = p > 0.15 ? 255 : 0;
+      a[i * 4 + 3] = p <= 0.3 ? 0 : p >= 0.7 ? 255 : ((p - 0.3) / 0.4) * 255;
+      bin[i] = p > 0.08 ? 1 : 0;
       if (p > 0.5) { sx += x; sy += y; n++; if (x < minX) minX = x; if (x > maxX) maxX = x; }
     }
   }
-  maskX.putImageData(maskImg, 0, 0); hardX.putImageData(hardImg, 0, 0);
+  maskX.putImageData(maskImg, 0, 0);
   st.hasPerson = n > mw * mh * 0.02;
   if (st.hasPerson) st.person = { x: sx / n / mw, y: sy / n / mh, w: (maxX - minX) / mw };
 }
@@ -478,17 +585,58 @@ function buildPerson() {
   personX.drawImage(maskC, 0, 0, W, H);
   personX.filter = "none"; personX.globalCompositeOperation = "source-over";
 }
+
+/* ---------- 배경 기억 ----------
+   사람이 가리지 않은 부분만 배경판(bgC)에 쌓는다. 사람 윤곽이 배경에 묻어 들어가면
+   사라질 때 잔상이 남으므로, 사람 영역을 넉넉히 부풀려서 그 안쪽은 절대 쌓지 않는다. */
 function learnBackground() {
-  if (st.bgLocked) return;
-  if (!st.bgReady) { bgX.drawImage(video, 0, 0, W, H); st.bgReady = true; return; }
-  tmpX.globalCompositeOperation = "source-over"; tmpX.filter = "none";
+  if (st.bgLocked || !bin) return;
+  const mw = maskC.width, mh = maskC.height, R = Math.max(4, Math.round(mw * 0.035));
+  for (let y = 0; y < mh; y++) {                       // 가로로 부풀리기
+    const row = y * mw; let run = 0;
+    for (let x = -R; x < mw; x++) {
+      const add = x + R; if (add < mw && bin[row + add]) run++;
+      const rem = x - R - 1; if (rem >= 0 && bin[row + rem]) run--;
+      if (x >= 0) binTmp[row + x] = run > 0 ? 1 : 0;
+    }
+  }
+  const d = hardImg.data;
+  for (let x = 0; x < mw; x++) {                       // 세로로 부풀리기
+    let run = 0;
+    for (let y = -R; y < mh; y++) {
+      const add = y + R; if (add < mh && binTmp[add * mw + x]) run++;
+      const rem = y - R - 1; if (rem >= 0 && binTmp[rem * mw + x]) run--;
+      if (y >= 0) d[(y * mw + x) * 4 + 3] = run > 0 ? 255 : 0;
+    }
+  }
+  hardX.putImageData(hardImg, 0, 0);
+  tmpX.globalCompositeOperation = "source-over";
   tmpX.clearRect(0, 0, W, H);
   tmpX.drawImage(video, 0, 0, W, H);
   tmpX.globalCompositeOperation = "destination-out";
-  if (canFilter) tmpX.filter = "blur(14px)";
-  for (let i = 0; i < 3; i++) tmpX.drawImage(hardC, 0, 0, W, H);   // 사람 주변까지 넉넉히 지운다
-  tmpX.filter = "none"; tmpX.globalCompositeOperation = "source-over";
+  tmpX.drawImage(hardC, 0, 0, W, H);
+  tmpX.globalCompositeOperation = "source-over";
   bgX.drawImage(tmpC, 0, 0);
+  st.bgReady = true;
+}
+// 아직 한 번도 드러나지 않은 자리는 주변 배경색을 번지게 해서 메운다
+function buildFill() {
+  fillX.globalAlpha = 1; fillX.globalCompositeOperation = "source-over";
+  fillX.clearRect(0, 0, W, H);
+  if (!st.bgLocked) {
+    let src = bgC;
+    for (let i = 0; i < 7; i++) {
+      const c = pyramid[i] || (pyramid[i] = mk());
+      c.width = Math.max(2, W >> (i + 1)); c.height = Math.max(2, H >> (i + 1));
+      c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
+      src = c;
+    }
+    for (let i = 6; i >= 0; i--) {
+      const times = i === 6 ? 8 : 2;
+      for (let j = 0; j < times; j++) fillX.drawImage(pyramid[i], 0, 0, W, H);
+    }
+  }
+  fillX.drawImage(bgC, 0, 0);
 }
 
 /* ---------- 매 프레임 ---------- */
@@ -514,39 +662,48 @@ function tick(now) {
         segX.drawImage(video, 0, 0, segC.width, segC.height);   // 작게 줄여서 분리해야 빠르다
         segmenter.segmentForVideo(segC, now, onMask);
       } catch (e) { console.warn(e); }
-      if (maskImg && !vanishing && st.frame % 6 === 0) learnBackground();
+      if (!vanishing && st.vanishK < 0.02 && st.frame % 6 === 0) learnBackground();
     }
 
-    const g = readGesture(list);
-    trackHold(g, now, dt);
+    trackHold(readGesture(list), now, dt);
 
-    // 구슬: 편 손마다 하나씩
     const open = vanishing ? [] : list.filter((h) => h.open);
-    st.orbs.length = Math.max(st.orbs.length, open.length);
-    for (let i = 0; i < st.orbs.length; i++) {
-      const o = st.orbs[i] || (st.orbs[i] = { x: 0, y: 0, r: 1, k: 0 }), h = open[i];
-      if (h) {
-        const snap = o.k < 0.05 ? 1 : 0.55;
-        o.x += (h.x - o.x) * snap; o.y += (h.y - o.y) * snap; o.r += (h.size * 0.8 - o.r) * snap;
-        o.k = Math.min(1, o.k + dt * 2.2);
-      } else o.k = Math.max(0, o.k - dt * 3.5);
+    if (!vanishing) {
+      if (st.demo.orb) open.push({ x: W * 0.27, y: H * 0.5, nx: 0.27, ny: 0.5, size: H * 0.13, type: "orb" });
+      if (st.demo.bolt) open.push({ x: W * 0.73, y: H * 0.5, nx: 0.73, ny: 0.5, size: H * 0.13, type: "bolt" });
     }
+    updateOrbs(open, dt);
 
     // 게이지
-    const h = st.hold, k = h.name && !h.fired ? Math.min(1, h.t / HOLD_MS) : h.fired ? 1 : 0;
-    ring.style.strokeDashoffset = 113.1 * (1 - k);
-    gaugeLabel.textContent = vanishing ? "숨는 중" : cloning ? "그림자와 함께" :
-      h.name ? NAMES[h.name] : open.length ? NAMES.orb : list.length ? "손 모양을 만들어 보세요" : "손을 보여 주세요";
-    if (humGain) humGain.gain.setTargetAtTime(soundOn ? 0.09 * Math.max(0, ...st.orbs.map((o) => o.k)) : 0, ac.currentTime, 0.08);
+    const h = st.hold;
+    let label = list.length ? "대기" : "손을 보여 주세요", pct = 0;
+    if (vanishing) { label = "은신"; pct = (st.vanishUntil - now) / VANISH_MS; }
+    else if (cloning) { label = "분신"; pct = (st.cloneUntil - now) / CLONE_MS; }
+    else if (h.name && !h.fired) { label = "모으는 중"; pct = h.t / HOLD_MS; }
+    else {
+      const top = st.orbs.reduce((m, o) => (o.k > (m ? m.k : 0.01) ? o : m), null);
+      if (top) { label = !top.on ? "흩어짐" : top.type === "bolt" ? "벼락" : "발동"; pct = top.k; }
+    }
+    pct = Math.max(0, Math.min(1, pct));
+    ring.style.strokeDashoffset = 113.1 * (1 - pct);
+    gaugeLabel.textContent = label; gaugePct.textContent = Math.round(pct * 100) + "%";
+
+    if (ac) {
+      const kOf = (type) => Math.max(0, ...st.orbs.filter((o) => o.type === type).map((o) => o.k));
+      humGain.gain.setTargetAtTime(soundOn ? 0.09 * kOf("orb") : 0, ac.currentTime, 0.08);
+      crackGain.gain.setTargetAtTime(soundOn ? kOf("bolt") * (Math.random() < 0.45 ? 0.13 : 0.02) : 0, ac.currentTime, 0.01);
+    }
   }
 
   // 그리기
   ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
   ctx.drawImage(video, 0, 0, W, H);
 
-  st.vanishK += ((vanishing ? 1 : 0) - st.vanishK) * Math.min(1, dt * 14);
-  if (st.vanishK > 0.01 && st.bgReady) {
-    ctx.globalAlpha = st.vanishK; ctx.drawImage(bgC, 0, 0); ctx.globalAlpha = 1;
+  st.vanishK += ((vanishing ? 1 : 0) - st.vanishK) * Math.min(1, dt * 16);
+  if (vanishing && st.vanishK > 0.97) st.vanishK = 1;      // 끝까지 완전히 덮는다
+  if (!vanishing && st.vanishK < 0.03) st.vanishK = 0;
+  if (st.vanishK > 0 && st.bgReady) {
+    ctx.globalAlpha = st.vanishK; ctx.drawImage(fillC, 0, 0); ctx.globalAlpha = 1;
   }
   if (st.wasVanishing && !vanishing) { puff(st.person.x * W, st.person.y * H, 0.8); poof(); }
   st.wasVanishing = vanishing;
@@ -556,21 +713,21 @@ function tick(now) {
     const age = now - st.cloneStart, left = st.cloneUntil - now;
     if (age > 140) {
       ctx.globalAlpha = Math.min(1, (age - 140) / 120);
-      cloneOffsets().forEach((dx, i) => {
-        if (i < 2) { const s = 0.82; ctx.drawImage(personC, dx + W * (1 - s) / 2, H * (1 - s), W * s, H * s); }
-        else ctx.drawImage(personC, dx, 0);
-      });
+      for (const dx of cloneOffsets()) ctx.drawImage(personC, dx, 0);
       ctx.globalAlpha = 1;
       ctx.drawImage(personC, 0, 0);     // 진짜는 맨 앞에
     }
     if (left < 160 && !st.cloneEnding) {
       st.cloneEnding = true; poof();
-      for (const dx of cloneOffsets()) puff(st.person.x * W + dx, st.person.y * H, 0.5);
+      for (const dx of cloneOffsets()) puff(st.person.x * W + dx, st.person.y * H, 0.55);
     }
   } else st.cloneEnding = false;
 
   const t = now / 1000;
-  for (const o of st.orbs) if (o && o.k > 0.01) drawOrb(o, t);
+  for (const o of st.orbs) {
+    if (o.k <= 0.01) continue;
+    if (o.type === "bolt") drawBolt(o, now); else drawOrb(o, t);
+  }
   drawParticles(dt);
 }
 
@@ -615,35 +772,42 @@ async function start() {
   video.srcObject = stream;
   await video.play();
   W = video.videoWidth || 1280; H = video.videoHeight || 720;
-  for (const c of [view, personC, bgC, tmpC]) { c.width = W; c.height = H; }
+  for (const c of [view, personC, bgC, tmpC, fillC]) { c.width = W; c.height = H; }
   segC.width = 320; segC.height = Math.round(320 * H / W);
   intro.hidden = true; stage.hidden = false;
-  toast("자연스럽게 움직이면 배경을 스스로 기억합니다", 3500);
+  toast("몸을 좌우로 움직여 주면 배경을 더 잘 기억합니다", 4000);
   requestAnimationFrame(tick);
 }
 startBtn.addEventListener("click", start);
 
 /* ---------- 버튼 ---------- */
+function toggleDemo(type) {
+  st.demo[type] = !st.demo[type];
+  if (st.demo[type]) setTimeout(() => { st.demo[type] = false; }, 5000);
+}
 document.querySelectorAll("[data-cast]").forEach((b) => b.addEventListener("click", () => cast(b.dataset.cast)));
+document.querySelectorAll("[data-demo]").forEach((b) => b.addEventListener("click", () => toggleDemo(b.dataset.demo)));
 addEventListener("keydown", (e) => {
   if (stage.hidden) return;
-  if (e.key === "2") cast("clone");
-  if (e.key === "3") cast("vanish");
+  if (e.key === "1") toggleDemo("orb");
+  if (e.key === "2") toggleDemo("bolt");
+  if (e.key === "3") cast("clone");
+  if (e.key === "4") cast("vanish");
 });
 $("btnSound").addEventListener("click", (e) => {
   soundOn = !soundOn;
-  e.currentTarget.textContent = soundOn ? "소리 끄기" : "소리 켜기";
   e.currentTarget.setAttribute("aria-pressed", String(soundOn));
 });
 $("btnLegend").addEventListener("click", (e) => {
-  const legend = $("legend"); legend.hidden = !legend.hidden;
-  e.currentTarget.textContent = legend.hidden ? "안내 보기" : "안내 숨기기";
+  legend.hidden = !legend.hidden;
+  e.currentTarget.setAttribute("aria-pressed", String(!legend.hidden));
 });
 $("btnBg").addEventListener("click", (e) => {
   const btn = e.currentTarget; btn.disabled = true;
   let n = 3;
   const step = () => {
     if (n > 0) { toast(`화면 밖으로 비켜 주세요. ${n}초 뒤 배경을 찍습니다`, 0); n--; setTimeout(step, 1000); return; }
+    bgX.globalCompositeOperation = "source-over";
     bgX.drawImage(video, 0, 0, W, H); st.bgReady = true; st.bgLocked = true;
     toast("배경을 찍었습니다"); btn.disabled = false;
   };
