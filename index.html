@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>손끝 도장</title>
+<meta name="description" content="카메라 앞에서 손 모양을 만들면 술법이 펼쳐지는 웹캠 놀이터">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --indigo: #152340;
+    --indigo-deep: #0c1529;
+    --paper: #efe8d6;
+    --paper-dim: #b9b6aa;
+    --leaf: #8fb070;
+    --brass: #c9a24b;
+    --brush: "East Sea Dokdo", "Nanum Brush Script", cursive;
+    --body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--indigo-deep);
+    color: var(--paper);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.6;
+    overflow: hidden;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible { outline: 3px solid var(--brass); outline-offset: 3px; }
+
+  /* ---------- 시작 화면 ---------- */
+  #intro {
+    position: fixed; inset: 0; z-index: 10;
+    display: grid;
+    grid-template-columns: auto minmax(0, 34rem);
+    gap: clamp(2rem, 7vw, 6rem);
+    align-items: center;
+    justify-content: center;
+    padding: clamp(1.5rem, 5vw, 4rem);
+    overflow-y: auto;
+    background:
+      radial-gradient(120% 90% at 15% 10%, #22386a 0%, transparent 60%),
+      var(--indigo);
+  }
+  #intro[hidden] { display: none; }
+  #intro h1 {
+    margin: 0;
+    font-family: var(--brush);
+    font-weight: 400;
+    font-size: clamp(6rem, 22vh, 13rem);
+    line-height: 0.95;
+    writing-mode: vertical-rl;
+    letter-spacing: 0.04em;
+    color: var(--paper);
+    text-shadow: 0.04em 0.04em 0 var(--indigo-deep);
+  }
+  #intro .lead { font-size: 1.25rem; margin: 0 0 2rem; max-width: 26em; }
+  .moves { list-style: none; margin: 0 0 2.25rem; padding: 0; }
+  .moves li {
+    display: grid;
+    grid-template-columns: 9.5em 1fr;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-top: 1px solid rgba(239, 232, 214, 0.22);
+  }
+  .moves li:last-child { border-bottom: 1px solid rgba(239, 232, 214, 0.22); }
+  .moves .sign { color: var(--leaf); }
+  .moves .name { font-family: var(--brush); font-size: 1.9rem; line-height: 1; display: block; margin-bottom: 0.2rem; }
+  .moves .what { color: var(--paper-dim); font-size: 0.95rem; }
+  #start {
+    background: var(--paper);
+    color: var(--indigo-deep);
+    border: 0;
+    border-radius: 999px;
+    padding: 0.85rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  #start:hover:not(:disabled) { background: #fff; }
+  #start:disabled { opacity: 0.6; cursor: progress; }
+  #intro .privacy { margin: 1rem 0 0; font-size: 0.9rem; color: var(--paper-dim); }
+  #error { margin: 1rem 0 0; color: #ffd08a; min-height: 1.6em; }
+
+  @media (max-width: 720px) {
+    #intro { grid-template-columns: 1fr; align-items: start; gap: 1.25rem; }
+    #intro h1 { writing-mode: horizontal-tb; font-size: 5rem; }
+    .moves li { grid-template-columns: 1fr; gap: 0.2rem; }
+  }
+
+  /* ---------- 카메라 화면 ---------- */
+  #stage { position: fixed; inset: 0; background: #000; }
+  #view {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+    display: block;
+  }
+  #cam { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+  .hud { position: absolute; z-index: 5; }
+  .panel {
+    background: rgba(12, 21, 41, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 14px;
+  }
+
+  #legend { top: 1rem; left: 1rem; padding: 0.4rem; max-width: min(21rem, calc(100vw - 2rem)); font-size: 0.92rem; }
+  #legend[hidden] { display: none; }
+  #legend .row {
+    display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: center;
+    width: 100%; padding: 0.5rem 0.7rem;
+    background: none; border: 0; border-radius: 10px; text-align: left;
+  }
+  #legend button.row:hover { background: rgba(239, 232, 214, 0.12); }
+  #legend .row b { font-family: var(--brush); font-weight: 400; font-size: 1.5rem; line-height: 1; color: var(--paper); }
+  #legend .row span { color: var(--leaf); }
+  #legend .tip { margin: 0.2rem 0.7rem 0.4rem; font-size: 0.8rem; color: var(--paper-dim); }
+
+  #gauge { left: 1rem; bottom: 1rem; display: flex; align-items: center; gap: 0.7rem; padding: 0.5rem 0.9rem 0.5rem 0.5rem; border-radius: 999px; }
+  #gauge svg { width: 46px; height: 46px; transform: rotate(-90deg); }
+  #gauge circle { fill: none; stroke-width: 4; }
+  #gauge .track { stroke: rgba(239, 232, 214, 0.2); }
+  #gauge .fill { stroke: var(--leaf); stroke-linecap: round; stroke-dasharray: 113.1; stroke-dashoffset: 113.1; }
+  #gaugeLabel { font-size: 0.9rem; min-width: 7.5em; }
+
+  #tools { right: 1rem; bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
+  #tools button {
+    border: 0; border-radius: 999px; padding: 0.55rem 1rem; font-size: 0.9rem;
+    background: rgba(12, 21, 41, 0.72);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  #tools button:hover { background: rgba(34, 56, 106, 0.9); }
+
+  #toast {
+    left: 50%; top: 1rem; transform: translateX(-50%);
+    padding: 0.6rem 1.1rem; font-size: 0.95rem; text-align: center;
+    max-width: calc(100vw - 2rem);
+    opacity: 0; transition: opacity 0.2s; pointer-events: none;
+  }
+  #toast.on { opacity: 1; }
+
+  #callout {
+    right: clamp(1rem, 6vw, 5rem); top: 50%;
+    writing-mode: vertical-rl;
+    font-family: var(--brush);
+    font-size: clamp(4.5rem, 17vh, 10rem);
+    line-height: 1;
+    color: var(--paper);
+    text-shadow: 0 0 0.25em rgba(12, 21, 41, 0.9), 0.04em 0.04em 0 var(--indigo-deep);
+    transform: translateY(-50%);
+    opacity: 0; pointer-events: none;
+  }
+  #callout.on { animation: stamp 1.6s ease-out forwards; }
+  @keyframes stamp {
+    0% { opacity: 0; transform: translateY(-50%) scale(1.5); }
+    12% { opacity: 1; transform: translateY(-50%) scale(1); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-50%) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    @keyframes stamp { 0% { opacity: 0; } 12% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
+  }
+  @media (max-width: 720px) {
+    #gaugeLabel { min-width: 0; }
+    #tools { max-width: 55vw; }
+  }
+</style>
+</head>
+<body>
+
+<main id="intro">
+  <h1>손끝 도장</h1>
+  <div>
+    <p class="lead">카메라 앞에서 손 모양을 만들면 술법이 펼쳐집니다.</p>
+    <ul class="moves">
+      <li>
+        <span class="sign">손바닥을 활짝 펴기</span>
+        <span><span class="name">회오리 구슬</span><span class="what">손바닥 위에서 빛나는 구슬이 돕니다.</span></span>
+      </li>
+      <li>
+        <span class="sign">두 손 검지를 열십자로 겹치기</span>
+        <span><span class="name">그림자 나누기</span><span class="what">내 모습이 양옆에 더 나타나 함께 움직입니다.</span></span>
+      </li>
+      <li>
+        <span class="sign">주먹을 쥐고 잠깐 버티기</span>
+        <span><span class="name">바람결 숨기</span><span class="what">연기와 나뭇잎을 남기고 화면에서 사라집니다.</span></span>
+      </li>
+    </ul>
+    <button id="start" type="button">카메라 켜기</button>
+    <p class="privacy">영상은 이 기기 안에서만 처리되고 어디에도 전송되지 않습니다.</p>
+    <p id="error" role="alert"></p>
+  </div>
+</main>
+
+<div id="stage" hidden>
+  <video id="cam" playsinline muted></video>
+  <canvas id="view"></canvas>
+
+  <div id="legend" class="hud panel">
+    <div class="row"><b>회오리 구슬</b><span>손바닥 펴기</span></div>
+    <button class="row" type="button" data-cast="clone"><b>그림자 나누기</b><span>검지 열십자</span></button>
+    <button class="row" type="button" data-cast="vanish"><b>바람결 숨기</b><span>주먹 쥐기</span></button>
+    <p class="tip">손 모양이 잘 안 잡히면 이름을 눌러도 됩니다.</p>
+  </div>
+
+  <div id="gauge" class="hud panel" aria-live="polite">
+    <svg viewBox="0 0 44 44" aria-hidden="true">
+      <circle class="track" cx="22" cy="22" r="18"></circle>
+      <circle class="fill" id="ring" cx="22" cy="22" r="18"></circle>
+    </svg>
+    <span id="gaugeLabel">손을 보여 주세요</span>
+  </div>
+
+  <div id="tools" class="hud">
+    <button id="btnBg" type="button">배경 찍기</button>
+    <button id="btnSound" type="button" aria-pressed="true">소리 끄기</button>
+    <button id="btnLegend" type="button">안내 숨기기</button>
+  </div>
+
+  <div id="toast" class="hud panel" role="status"></div>
+  <div id="callout" class="hud" aria-hidden="true"></div>
+</div>
+
+<script type="module">
+const CDN = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3";
+const HAND_MODEL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+const SEG_MODEL = "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite";
+
+const NAMES = { orb: "회오리 구슬", clone: "그림자 나누기", vanish: "바람결 숨기" };
+const HOLD_MS = 700;        // 손 모양을 이만큼 유지하면 발동
+const CLONE_MS = 7000;
+const VANISH_MS = 3500;
+
+const $ = (id) => document.getElementById(id);
+const intro = $("intro"), stage = $("stage"), startBtn = $("start"), errorEl = $("error");
+const video = $("cam"), view = $("view"), ctx = view.getContext("2d");
+const ring = $("ring"), gaugeLabel = $("gaugeLabel"), toastEl = $("toast"), callout = $("callout");
+
+let W = 1280, H = 720;
+let hands, segmenter;
+
+// 보조 캔버스
+const mk = () => document.createElement("canvas");
+const maskC = mk(), hardC = mk(), personC = mk(), bgC = mk(), tmpC = mk();
+const maskX = maskC.getContext("2d"), hardX = hardC.getContext("2d");
+const personX = personC.getContext("2d"), bgX = bgC.getContext("2d"), tmpX = tmpC.getContext("2d");
+let maskImg, hardImg;
+const canFilter = "filter" in ctx;
+
+// 상태
+const st = {
+  orbs: [],                               // 손마다 {x, y, r, k}
+  cloneUntil: 0, cloneStart: 0,
+  vanishUntil: 0, vanishStart: 0, vanishK: 0,
+  person: { x: 0.5, y: 0.55, w: 0.3 },    // 사람 위치(정규화)
+  hasPerson: false,
+  bgReady: false, bgLocked: false,
+  invert: false, voteOk: 0, voteBad: 0,
+  hold: { name: null, t: 0, last: 0, fired: false },
+  frame: 0,
+};
+const particles = [];
+
+/* ---------- 소리 ---------- */
+let ac, soundOn = true, humGain;
+function initAudio() {
+  try {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    const len = ac.sampleRate * 2, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    ac.noise = buf;
+    const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+    const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 520; bp.Q.value = 1.4;
+    humGain = ac.createGain(); humGain.gain.value = 0;
+    src.connect(bp).connect(humGain).connect(ac.destination); src.start();
+  } catch { ac = null; }
+}
+function poof() {
+  if (!ac || !soundOn) return;
+  const t = ac.currentTime, src = ac.createBufferSource(); src.buffer = ac.noise;
+  const lp = ac.createBiquadFilter(); lp.type = "lowpass";
+  lp.frequency.setValueAtTime(1400, t); lp.frequency.exponentialRampToValueAtTime(160, t + 0.5);
+  const g = ac.createGain(); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+  src.connect(lp).connect(g).connect(ac.destination); src.start(t, Math.random()); src.stop(t + 0.65);
+}
+
+/* ---------- 안내 표시 ---------- */
+let toastTimer;
+function toast(msg, ms = 2200) {
+  toastEl.textContent = msg; toastEl.classList.add("on");
+  clearTimeout(toastTimer);
+  if (ms) toastTimer = setTimeout(() => toastEl.classList.remove("on"), ms);
+}
+function showCallout(text) {
+  callout.textContent = text;
+  callout.classList.remove("on"); void callout.offsetWidth; callout.classList.add("on");
+}
+
+/* ---------- 입자: 연기와 나뭇잎 ---------- */
+const smokeSprite = mk();
+{
+  smokeSprite.width = smokeSprite.height = 128;
+  const x = smokeSprite.getContext("2d"), g = x.createRadialGradient(64, 64, 4, 64, 64, 64);
+  g.addColorStop(0, "rgba(255,255,255,0.95)"); g.addColorStop(0.5, "rgba(236,238,244,0.55)"); g.addColorStop(1, "rgba(230,232,240,0)");
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+}
+function puff(x, y, scale = 1) {
+  const s = scale * H;
+  for (let i = 0; i < 30; i++) {
+    const a = Math.random() * Math.PI * 2, v = (0.1 + Math.random() * 0.5) * s;
+    particles.push({
+      type: "smoke", x: x + Math.cos(a) * s * 0.06, y: y + Math.sin(a) * s * 0.12,
+      vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.8 - s * 0.12,
+      life: 0, max: 0.7 + Math.random() * 0.7, size: s * (0.14 + Math.random() * 0.16),
+    });
+  }
+}
+function leaves(x, y) {
+  for (let i = 0; i < 16; i++) {
+    const a = Math.random() * Math.PI * 2, v = H * (0.15 + Math.random() * 0.35);
+    particles.push({
+      type: "leaf", x, y: y + (Math.random() - 0.5) * H * 0.3,
+      vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.5 - H * 0.1,
+      life: 0, max: 1.6 + Math.random() * 1.2, size: H * (0.012 + Math.random() * 0.012),
+      rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 9,
+    });
+  }
+}
+function drawParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.life += dt;
+    if (p.life >= p.max) { particles.splice(i, 1); continue; }
+    const k = p.life / p.max;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.type === "smoke") {
+      p.vx *= 0.94; p.vy *= 0.94;
+      const size = p.size * (1 + k * 2.2);
+      ctx.globalAlpha = (1 - k) * (1 - k) * 0.9;
+      ctx.drawImage(smokeSprite, p.x - size / 2, p.y - size / 2, size, size);
+    } else {
+      p.vy += H * 0.35 * dt; p.vx *= 0.985; p.rot += p.vr * dt;
+      ctx.globalAlpha = Math.min(1, (1 - k) * 2);
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.scale(1, 0.35 + 0.65 * Math.abs(Math.sin(p.rot * 1.7)));
+      ctx.fillStyle = "#7da55a";
+      ctx.beginPath(); ctx.ellipse(0, 0, p.size * 1.6, p.size * 0.7, 0, 0, 6.2832); ctx.fill();
+      ctx.restore();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ---------- 회오리 구슬 ---------- */
+function drawOrb(o, t) {
+  const { x, y, k } = o, r = o.r * (0.35 + 0.65 * k);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  let g = ctx.createRadialGradient(x, y, 0, x, y, r * 2.4);
+  g.addColorStop(0, `rgba(120,200,255,${0.4 * k})`); g.addColorStop(1, "rgba(60,140,255,0)");
+  ctx.fillStyle = g; ctx.fillRect(x - r * 2.4, y - r * 2.4, r * 4.8, r * 4.8);
+  g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(255,255,255,${k})`); g.addColorStop(0.4, `rgba(170,230,255,${0.9 * k})`);
+  g.addColorStop(0.8, `rgba(50,130,255,${0.45 * k})`); g.addColorStop(1, "rgba(40,110,255,0)");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+  ctx.lineCap = "round";
+  for (let i = 0; i < 9; i++) {
+    const rr = r * (0.22 + i * 0.085), spin = t * (5 + i * 0.9) * (i % 2 ? 1 : -1) + i * 1.3;
+    ctx.strokeStyle = `rgba(255,255,255,${(0.6 - i * 0.04) * k})`;
+    ctx.lineWidth = r * (0.05 - i * 0.003);
+    ctx.beginPath();
+    ctx.ellipse(x, y, rr, rr * (0.45 + 0.5 * Math.abs(Math.sin(i * 2.1))), i * 0.7 + t * 0.8, spin, spin + 1.5);
+    ctx.stroke();
+  }
+  for (let i = 0; i < 10; i++) {
+    const a = t * (3 + (i % 4)) + i * 0.63, rr = r * (1.0 + 0.35 * Math.sin(t * 2 + i));
+    ctx.fillStyle = `rgba(200,240,255,${0.7 * k})`;
+    ctx.beginPath(); ctx.arc(x + Math.cos(a) * rr, y + Math.sin(a) * rr * 0.8, r * 0.035, 0, 6.2832); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ---------- 손 모양 읽기 ---------- */
+const dist = (a, b) => Math.hypot((a.x - b.x) * W, (a.y - b.y) * H);
+function readHand(lm) {
+  const w = lm[0];
+  const ratio = (tip, pip) => dist(lm[tip], w) / (dist(lm[pip], w) || 1);
+  const r = [ratio(8, 6), ratio(12, 10), ratio(16, 14), ratio(20, 18)];
+  const ext = r.map((v) => v > 1.22), cur = r.map((v) => v < 1.08);
+  const ids = [0, 5, 9, 13, 17];
+  const cx = ids.reduce((s, i) => s + lm[i].x, 0) / 5, cy = ids.reduce((s, i) => s + lm[i].y, 0) / 5;
+  return {
+    x: cx * W, y: cy * H, nx: cx, ny: cy, size: dist(lm[0], lm[9]),
+    open: ext.every(Boolean),
+    fist: cur.every(Boolean),
+    point: ext[0] && !ext[2] && !ext[3],
+  };
+}
+function readGesture(list) {
+  if (list.length === 2) {
+    const [a, b] = list, close = Math.hypot(a.x - b.x, a.y - b.y) < (a.size + b.size) * 0.95;
+    if (close) return !a.open && !b.open && (a.point || b.point) ? "clone" : null;
+  }
+  if (list.some((h) => h.fist)) return "vanish";
+  return null;
+}
+
+/* ---------- 술법 발동 ---------- */
+function cast(name) {
+  const now = performance.now(), px = st.person.x * W, py = st.person.y * H;
+  if (name === "clone") {
+    if (now < st.cloneUntil || now < st.vanishUntil) return;
+    st.cloneStart = now; st.cloneUntil = now + CLONE_MS;
+    for (const dx of cloneOffsets()) puff(px + dx, py, 0.55);
+  } else if (name === "vanish") {
+    if (now < st.vanishUntil) return;
+    st.cloneUntil = 0;
+    st.vanishStart = now; st.vanishUntil = now + VANISH_MS;
+    puff(px, py, 0.9); leaves(px, py);
+  } else return;
+  poof(); showCallout(NAMES[name]);
+}
+const cloneOffsets = () => [-0.17 * W, 0.17 * W, -0.33 * W, 0.33 * W];
+
+function trackHold(g, now, dt) {
+  const h = st.hold;
+  if (g && g === h.name) { h.t += dt * 1000; h.last = now; }
+  else if (g) { st.hold = { name: g, t: 0, last: now, fired: false }; }
+  else if (h.name && now - h.last > 250) { st.hold = { name: null, t: 0, last: 0, fired: false }; }
+  const cur = st.hold;
+  if (cur.name && !cur.fired && cur.t >= HOLD_MS) { cur.fired = true; cast(cur.name); }
+}
+
+/* ---------- 사람 분리 ---------- */
+function onMask(result) {
+  const m = result.confidenceMasks && result.confidenceMasks[result.confidenceMasks.length - 1];
+  if (!m) return;
+  const f = m.getAsFloat32Array(), mw = m.width, mh = m.height;
+  if (maskC.width !== mw || maskC.height !== mh) {
+    maskC.width = hardC.width = mw; maskC.height = hardC.height = mh;
+    maskImg = maskX.createImageData(mw, mh); hardImg = hardX.createImageData(mw, mh);
+  }
+  // 모델에 따라 사람/배경이 뒤집혀 나오는 경우를 손 위치로 판별한다
+  for (const o of st.handsNow || []) {
+    const ix = Math.min(mw - 1, Math.max(0, Math.round(o.nx * mw))), iy = Math.min(mh - 1, Math.max(0, Math.round(o.ny * mh)));
+    if (f[iy * mw + ix] > 0.5) st.voteOk++; else st.voteBad++;
+  }
+  st.invert = st.voteBad > st.voteOk + 8;
+
+  const a = maskImg.data, b = hardImg.data, inv = st.invert;
+  let sx = 0, sy = 0, n = 0, minX = mw, maxX = 0;
+  for (let i = 0, y = 0; y < mh; y++) {
+    for (let x = 0; x < mw; x++, i++) {
+      const p = inv ? 1 - f[i] : f[i];
+      const soft = p <= 0.3 ? 0 : p >= 0.7 ? 255 : ((p - 0.3) / 0.4) * 255;
+      a[i * 4 + 3] = soft;
+      b[i * 4 + 3] = p > 0.15 ? 255 : 0;
+      if (p > 0.5) { sx += x; sy += y; n++; if (x < minX) minX = x; if (x > maxX) maxX = x; }
+    }
+  }
+  maskX.putImageData(maskImg, 0, 0); hardX.putImageData(hardImg, 0, 0);
+  st.hasPerson = n > mw * mh * 0.02;
+  if (st.hasPerson) st.person = { x: sx / n / mw, y: sy / n / mh, w: (maxX - minX) / mw };
+}
+function buildPerson() {
+  personX.globalCompositeOperation = "source-over"; personX.filter = "none";
+  personX.clearRect(0, 0, W, H);
+  personX.drawImage(video, 0, 0, W, H);
+  personX.globalCompositeOperation = "destination-in";
+  if (canFilter) personX.filter = "blur(3px)";
+  personX.drawImage(maskC, 0, 0, W, H);
+  personX.filter = "none"; personX.globalCompositeOperation = "source-over";
+}
+function learnBackground() {
+  if (st.bgLocked) return;
+  if (!st.bgReady) { bgX.drawImage(video, 0, 0, W, H); st.bgReady = true; return; }
+  tmpX.globalCompositeOperation = "source-over"; tmpX.filter = "none";
+  tmpX.clearRect(0, 0, W, H);
+  tmpX.drawImage(video, 0, 0, W, H);
+  tmpX.globalCompositeOperation = "destination-out";
+  if (canFilter) tmpX.filter = "blur(14px)";
+  for (let i = 0; i < 3; i++) tmpX.drawImage(hardC, 0, 0, W, H);   // 사람 주변까지 넉넉히 지운다
+  tmpX.filter = "none"; tmpX.globalCompositeOperation = "source-over";
+  bgX.drawImage(tmpC, 0, 0);
+}
+
+/* ---------- 매 프레임 ---------- */
+let lastT = 0, lastVideoT = -1;
+function tick(now) {
+  requestAnimationFrame(tick);
+  if (video.readyState < 2) return;
+  const dt = Math.min(0.05, (now - lastT) / 1000 || 0.016); lastT = now;
+  const fresh = video.currentTime !== lastVideoT; lastVideoT = video.currentTime;
+  const cloning = now < st.cloneUntil, vanishing = now < st.vanishUntil;
+
+  if (fresh) {
+    st.frame++;
+    let list = [];
+    try {
+      const res = hands.detectForVideo(video, now);
+      list = (res.landmarks || []).map(readHand);
+    } catch (e) { console.warn(e); }
+    st.handsNow = list;
+
+    if (cloning || st.frame % 2 === 0) {
+      try { segmenter.segmentForVideo(video, now, onMask); } catch (e) { console.warn(e); }
+      if (maskImg && !vanishing && st.frame % 6 === 0) learnBackground();
+    }
+
+    const g = readGesture(list);
+    trackHold(g, now, dt);
+
+    // 구슬: 편 손마다 하나씩
+    const open = vanishing ? [] : list.filter((h) => h.open);
+    st.orbs.length = Math.max(st.orbs.length, open.length);
+    for (let i = 0; i < st.orbs.length; i++) {
+      const o = st.orbs[i] || (st.orbs[i] = { x: 0, y: 0, r: 1, k: 0 }), h = open[i];
+      if (h) {
+        const snap = o.k < 0.05 ? 1 : 0.55;
+        o.x += (h.x - o.x) * snap; o.y += (h.y - o.y) * snap; o.r += (h.size * 0.8 - o.r) * snap;
+        o.k = Math.min(1, o.k + dt * 2.2);
+      } else o.k = Math.max(0, o.k - dt * 3.5);
+    }
+
+    // 게이지
+    const h = st.hold, k = h.name && !h.fired ? Math.min(1, h.t / HOLD_MS) : h.fired ? 1 : 0;
+    ring.style.strokeDashoffset = 113.1 * (1 - k);
+    gaugeLabel.textContent = vanishing ? "숨는 중" : cloning ? "그림자와 함께" :
+      h.name ? NAMES[h.name] : open.length ? NAMES.orb : list.length ? "손 모양을 만들어 보세요" : "손을 보여 주세요";
+    if (humGain) humGain.gain.setTargetAtTime(soundOn ? 0.09 * Math.max(0, ...st.orbs.map((o) => o.k)) : 0, ac.currentTime, 0.08);
+  }
+
+  // 그리기
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+  ctx.drawImage(video, 0, 0, W, H);
+
+  st.vanishK += ((vanishing ? 1 : 0) - st.vanishK) * Math.min(1, dt * 14);
+  if (st.vanishK > 0.01 && st.bgReady) {
+    ctx.globalAlpha = st.vanishK; ctx.drawImage(bgC, 0, 0); ctx.globalAlpha = 1;
+  }
+  if (st.wasVanishing && !vanishing) { puff(st.person.x * W, st.person.y * H, 0.8); poof(); }
+  st.wasVanishing = vanishing;
+
+  if (cloning && maskImg) {
+    if (fresh) buildPerson();
+    const age = now - st.cloneStart, left = st.cloneUntil - now;
+    if (age > 140) {
+      ctx.globalAlpha = Math.min(1, (age - 140) / 120);
+      cloneOffsets().forEach((dx, i) => {
+        if (i < 2) { const s = 0.82; ctx.drawImage(personC, dx + W * (1 - s) / 2, H * (1 - s), W * s, H * s); }
+        else ctx.drawImage(personC, dx, 0);
+      });
+      ctx.globalAlpha = 1;
+      ctx.drawImage(personC, 0, 0);     // 진짜는 맨 앞에
+    }
+    if (left < 160 && !st.cloneEnding) {
+      st.cloneEnding = true; poof();
+      for (const dx of cloneOffsets()) puff(st.person.x * W + dx, st.person.y * H, 0.5);
+    }
+  } else st.cloneEnding = false;
+
+  const t = now / 1000;
+  for (const o of st.orbs) if (o && o.k > 0.01) drawOrb(o, t);
+  drawParticles(dt);
+}
+
+/* ---------- 시작 ---------- */
+async function createTask(Cls, fileset, opts) {
+  try {
+    return await Cls.createFromOptions(fileset, { ...opts, baseOptions: { ...opts.baseOptions, delegate: "GPU" } });
+  } catch {
+    return await Cls.createFromOptions(fileset, { ...opts, baseOptions: { ...opts.baseOptions, delegate: "CPU" } });
+  }
+}
+async function start() {
+  startBtn.disabled = true; errorEl.textContent = "";
+  initAudio();
+  let stream;
+  try {
+    startBtn.textContent = "카메라 여는 중…";
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false,
+    });
+  } catch {
+    errorEl.textContent = "카메라를 켤 수 없습니다. 주소창에서 카메라 권한을 허용한 뒤 다시 눌러 주세요.";
+    startBtn.disabled = false; startBtn.textContent = "카메라 켜기"; return;
+  }
+  try {
+    startBtn.textContent = "손 인식 준비 중…";
+    const { FilesetResolver, HandLandmarker, ImageSegmenter } = await import(CDN + "/vision_bundle.mjs");
+    const fileset = await FilesetResolver.forVisionTasks(CDN + "/wasm");
+    hands = await createTask(HandLandmarker, fileset, {
+      baseOptions: { modelAssetPath: HAND_MODEL }, runningMode: "VIDEO", numHands: 2,
+    });
+    segmenter = await createTask(ImageSegmenter, fileset, {
+      baseOptions: { modelAssetPath: SEG_MODEL }, runningMode: "VIDEO",
+      outputConfidenceMasks: true, outputCategoryMask: false,
+    });
+  } catch (e) {
+    console.error(e);
+    stream.getTracks().forEach((tr) => tr.stop());
+    errorEl.textContent = "손 인식 모델을 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침해 주세요.";
+    startBtn.disabled = false; startBtn.textContent = "카메라 켜기"; return;
+  }
+  video.srcObject = stream;
+  await video.play();
+  W = video.videoWidth || 1280; H = video.videoHeight || 720;
+  for (const c of [view, personC, bgC, tmpC]) { c.width = W; c.height = H; }
+  intro.hidden = true; stage.hidden = false;
+  toast("자연스럽게 움직이면 배경을 스스로 기억합니다", 3500);
+  requestAnimationFrame(tick);
+}
+startBtn.addEventListener("click", start);
+
+/* ---------- 버튼 ---------- */
+document.querySelectorAll("[data-cast]").forEach((b) => b.addEventListener("click", () => cast(b.dataset.cast)));
+addEventListener("keydown", (e) => {
+  if (stage.hidden) return;
+  if (e.key === "2") cast("clone");
+  if (e.key === "3") cast("vanish");
+});
+$("btnSound").addEventListener("click", (e) => {
+  soundOn = !soundOn;
+  e.currentTarget.textContent = soundOn ? "소리 끄기" : "소리 켜기";
+  e.currentTarget.setAttribute("aria-pressed", String(soundOn));
+});
+$("btnLegend").addEventListener("click", (e) => {
+  const legend = $("legend"); legend.hidden = !legend.hidden;
+  e.currentTarget.textContent = legend.hidden ? "안내 보기" : "안내 숨기기";
+});
+$("btnBg").addEventListener("click", (e) => {
+  const btn = e.currentTarget; btn.disabled = true;
+  let n = 3;
+  const step = () => {
+    if (n > 0) { toast(`화면 밖으로 비켜 주세요. ${n}초 뒤 배경을 찍습니다`, 0); n--; setTimeout(step, 1000); return; }
+    bgX.drawImage(video, 0, 0, W, H); st.bgReady = true; st.bgLocked = true;
+    toast("배경을 찍었습니다"); btn.disabled = false;
+  };
+  step();
+});
+</script>
+</body>
+</html>
